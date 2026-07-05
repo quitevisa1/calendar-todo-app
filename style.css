@@ -401,4 +401,14 @@ body {
   .day-cell { min-height: 72px; }
   .month-label { font-size: 1.2rem; min-width: 140px; }
   .day-tasks-preview { display: none; }
+
+  .day-number {
+    order: 1;
+  }
+  .task-count-badge {
+    position: static;
+    order: 2;
+    align-self: flex-start;
+    margin-top: 2px;
+  }
 }
