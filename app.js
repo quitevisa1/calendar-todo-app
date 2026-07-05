@@ -153,13 +153,13 @@
     tasks.forEach((task, index) => {
       const li = document.createElement('li');
       li.className = `task-item ${task.done ? 'done' : ''}`;
-      li.draggable = true;
       li.dataset.index = index;
 
       const handle = document.createElement('span');
       handle.className = 'task-drag-handle';
       handle.setAttribute('aria-hidden', 'true');
       handle.textContent = '⠿';
+      handle.addEventListener('pointerdown', (e) => startDrag(e, li));
 
       const checkbox = document.createElement('button');
       checkbox.className = `task-checkbox ${task.done ? 'checked' : ''}`;
@@ -181,47 +181,89 @@
       li.appendChild(checkbox);
       li.appendChild(text);
       li.appendChild(del);
-
-      li.addEventListener('dragstart', (e) => {
-        li.classList.add('dragging');
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', String(index));
-      });
-
-      li.addEventListener('dragend', () => {
-        li.classList.remove('dragging');
-        taskList.querySelectorAll('.task-item').forEach(el => el.classList.remove('drag-over'));
-      });
-
-      li.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        li.classList.add('drag-over');
-      });
-
-      li.addEventListener('dragleave', () => {
-        li.classList.remove('drag-over');
-      });
-
-      li.addEventListener('drop', (e) => {
-        e.preventDefault();
-        li.classList.remove('drag-over');
-        const fromIndex = Number(e.dataTransfer.getData('text/plain'));
-        const toIndex = index;
-        reorderTasks(fromIndex, toIndex);
-      });
-
       taskList.appendChild(li);
     });
   }
 
-  function reorderTasks(fromIndex, toIndex) {
-    if (fromIndex === toIndex || Number.isNaN(fromIndex)) return;
+  let dragCtx = null;
+
+  function startDrag(e, li) {
+    e.preventDefault();
+    const handle = e.currentTarget;
+    const rect = li.getBoundingClientRect();
+
+    const placeholder = document.createElement('li');
+    placeholder.className = 'task-item task-placeholder';
+    placeholder.style.height = `${rect.height}px`;
+    li.parentNode.insertBefore(placeholder, li);
+
+    li.classList.add('lifted');
+    li.style.width = `${rect.width}px`;
+    li.style.height = `${rect.height}px`;
+    li.style.left = `${rect.left}px`;
+    li.style.top = `${rect.top}px`;
+
+    dragCtx = {
+      li,
+      handle,
+      placeholder,
+      offsetY: e.clientY - rect.top,
+      pointerId: e.pointerId,
+    };
+
+    handle.setPointerCapture(e.pointerId);
+    handle.addEventListener('pointermove', onDragMove);
+    handle.addEventListener('pointerup', onDragEnd);
+    handle.addEventListener('pointercancel', onDragEnd);
+  }
+
+  function onDragMove(e) {
+    if (!dragCtx) return;
+    e.preventDefault();
+    dragCtx.li.style.top = `${e.clientY - dragCtx.offsetY}px`;
+
+    const siblings = [...taskList.querySelectorAll('.task-item')].filter(
+      el => el !== dragCtx.li && el !== dragCtx.placeholder
+    );
+    const afterEl = siblings.reduce((closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = e.clientY - box.top - box.height / 2;
+      if (offset < 0 && offset > closest.offset) {
+        return { offset, element: child };
+      }
+      return closest;
+    }, { offset: Number.NEGATIVE_INFINITY, element: null }).element;
+
+    if (afterEl) {
+      taskList.insertBefore(dragCtx.placeholder, afterEl);
+    } else {
+      taskList.appendChild(dragCtx.placeholder);
+    }
+  }
+
+  function onDragEnd() {
+    if (!dragCtx) return;
+    const { li, handle, placeholder, pointerId } = dragCtx;
+
+    handle.removeEventListener('pointermove', onDragMove);
+    handle.removeEventListener('pointerup', onDragEnd);
+    handle.removeEventListener('pointercancel', onDragEnd);
+    handle.releasePointerCapture(pointerId);
+
+    placeholder.replaceWith(li);
+    li.classList.remove('lifted');
+    li.style.width = li.style.height = li.style.left = li.style.top = '';
+
     const tasks = data[selectedKey];
-    if (!tasks) return;
-    const [moved] = tasks.splice(fromIndex, 1);
-    tasks.splice(toIndex, 0, moved);
-    saveData(data);
+    if (tasks) {
+      const newOrder = [...taskList.querySelectorAll('.task-item')].map(
+        el => tasks[Number(el.dataset.index)]
+      );
+      data[selectedKey] = newOrder;
+      saveData(data);
+    }
+
+    dragCtx = null;
     renderTaskList();
   }
 
