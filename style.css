@@ -337,9 +337,30 @@ body {
   padding: 10px 8px;
   border-radius: var(--radius-sm);
   transition: background 0.15s ease;
+  border-top: 2px solid transparent;
+  border-bottom: 2px solid transparent;
 }
 .task-item:hover {
   background: var(--bg);
+}
+.task-item.dragging {
+  opacity: 0.4;
+}
+.task-item.drag-over {
+  border-top-color: var(--accent);
+}
+
+.task-drag-handle {
+  flex: none;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: grab;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.task-item:hover .task-drag-handle {
+  opacity: 1;
 }
 
 .task-checkbox {

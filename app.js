@@ -153,6 +153,13 @@
     tasks.forEach((task, index) => {
       const li = document.createElement('li');
       li.className = `task-item ${task.done ? 'done' : ''}`;
+      li.draggable = true;
+      li.dataset.index = index;
+
+      const handle = document.createElement('span');
+      handle.className = 'task-drag-handle';
+      handle.setAttribute('aria-hidden', 'true');
+      handle.textContent = '⠿';
 
       const checkbox = document.createElement('button');
       checkbox.className = `task-checkbox ${task.done ? 'checked' : ''}`;
@@ -170,11 +177,52 @@
       del.textContent = '×';
       del.addEventListener('click', () => deleteTask(index));
 
+      li.appendChild(handle);
       li.appendChild(checkbox);
       li.appendChild(text);
       li.appendChild(del);
+
+      li.addEventListener('dragstart', (e) => {
+        li.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', String(index));
+      });
+
+      li.addEventListener('dragend', () => {
+        li.classList.remove('dragging');
+        taskList.querySelectorAll('.task-item').forEach(el => el.classList.remove('drag-over'));
+      });
+
+      li.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        li.classList.add('drag-over');
+      });
+
+      li.addEventListener('dragleave', () => {
+        li.classList.remove('drag-over');
+      });
+
+      li.addEventListener('drop', (e) => {
+        e.preventDefault();
+        li.classList.remove('drag-over');
+        const fromIndex = Number(e.dataTransfer.getData('text/plain'));
+        const toIndex = index;
+        reorderTasks(fromIndex, toIndex);
+      });
+
       taskList.appendChild(li);
     });
+  }
+
+  function reorderTasks(fromIndex, toIndex) {
+    if (fromIndex === toIndex || Number.isNaN(fromIndex)) return;
+    const tasks = data[selectedKey];
+    if (!tasks) return;
+    const [moved] = tasks.splice(fromIndex, 1);
+    tasks.splice(toIndex, 0, moved);
+    saveData(data);
+    renderTaskList();
   }
 
   function addTask(text) {
