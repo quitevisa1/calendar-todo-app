@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calendar To-Do</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app">
+
+  <header class="app-header">
+    <h1 class="brand">✦ Calendar</h1>
+    <div class="month-nav">
+      <button id="prevMonth" class="nav-btn" aria-label="Previous month">&#8249;</button>
+      <h2 id="monthLabel" class="month-label"></h2>
+      <button id="nextMonth" class="nav-btn" aria-label="Next month">&#8250;</button>
+    </div>
+    <button id="todayBtn" class="today-btn">Today</button>
+  </header>
+
+  <div class="weekday-row" id="weekdayRow"></div>
+
+  <div class="calendar-grid" id="calendarGrid"></div>
+
+</div>
+
+<!-- Day detail panel -->
+<div id="overlay" class="overlay"></div>
+<aside id="dayPanel" class="day-panel">
+  <div class="day-panel-header">
+    <div>
+      <div class="day-panel-weekday" id="panelWeekday"></div>
+      <h3 id="panelDate" class="day-panel-date"></h3>
+    </div>
+    <button id="closePanel" class="close-btn" aria-label="Close">&times;</button>
+  </div>
+
+  <form id="taskForm" class="task-form">
+    <span class="bullet-prefix">&bull;</span>
+    <input id="taskInput" type="text" placeholder="Add a task..." autocomplete="off" />
+    <button type="submit" class="add-btn" aria-label="Add task">+</button>
+  </form>
+
+  <ul id="taskList" class="task-list"></ul>
+  <p id="emptyState" class="empty-state">No tasks yet. Add your first one above.</p>
+</aside>
+
+<script src="app.js"></script>
+</body>
+</html>
