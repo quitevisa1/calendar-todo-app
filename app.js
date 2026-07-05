@@ -135,7 +135,6 @@
     overlay.classList.add('visible');
     dayPanel.classList.add('open');
     taskInput.value = '';
-    taskInput.focus();
   }
 
   function closeDayPanel() {
