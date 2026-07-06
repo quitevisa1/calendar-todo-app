@@ -15,6 +15,7 @@
   const panelDate = document.getElementById('panelDate');
   const taskForm = document.getElementById('taskForm');
   const taskInput = document.getElementById('taskInput');
+  const taskTimeInput = document.getElementById('taskTime');
   const taskList = document.getElementById('taskList');
   const emptyState = document.getElementById('emptyState');
 
@@ -102,7 +103,7 @@
 
       const previewTasks = tasks.slice(0, 3).map(t => `
         <div class="mini-task ${t.done ? 'done' : ''}">
-          <span class="dot"></span><span>${escapeHtml(t.text)}</span>
+          <span class="dot"></span><span>${t.time ? `${formatTime(t.time)} &middot; ` : ''}${escapeHtml(t.text)}</span>
         </div>
       `).join('');
 
@@ -123,6 +124,14 @@
     return div.innerHTML;
   }
 
+  function formatTime(time) {
+    if (!time) return '';
+    const [h, m] = time.split(':').map(Number);
+    const period = h >= 12 ? 'PM' : 'AM';
+    const hour12 = h % 12 === 0 ? 12 : h % 12;
+    return `${hour12}:${String(m).padStart(2, '0')} ${period}`;
+  }
+
   function openDayPanel(y, m, d) {
     selectedKey = dateKey(y, m, d);
     const dateObj = new Date(y, m, d);
@@ -135,6 +144,7 @@
     overlay.classList.add('visible');
     dayPanel.classList.add('open');
     taskInput.value = '';
+    taskTimeInput.value = '';
   }
 
   function closeDayPanel() {
@@ -179,6 +189,12 @@
 
       li.appendChild(handle);
       li.appendChild(checkbox);
+      if (task.time) {
+        const timeEl = document.createElement('span');
+        timeEl.className = 'task-time';
+        timeEl.textContent = formatTime(task.time);
+        li.appendChild(timeEl);
+      }
       li.appendChild(text);
       li.appendChild(del);
       taskList.appendChild(li);
@@ -267,10 +283,10 @@
     renderTaskList();
   }
 
-  function addTask(text) {
+  function addTask(text, time) {
     if (!selectedKey) return;
     if (!data[selectedKey]) data[selectedKey] = [];
-    data[selectedKey].push({ text, done: false });
+    data[selectedKey].push({ text, done: false, time: time || null });
     saveData(data);
     renderTaskList();
     renderCalendar();
@@ -295,8 +311,9 @@
     e.preventDefault();
     const text = taskInput.value.trim();
     if (!text) return;
-    addTask(text);
+    addTask(text, taskTimeInput.value);
     taskInput.value = '';
+    taskTimeInput.value = '';
     taskInput.focus();
   });
 

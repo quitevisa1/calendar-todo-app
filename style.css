@@ -293,6 +293,7 @@ body {
 }
 .task-form input {
   flex: 1;
+  min-width: 0;
   border: none;
   background: transparent;
   font-size: 0.95rem;
@@ -300,6 +301,17 @@ body {
   outline: none;
   font-family: inherit;
 }
+.task-form .task-time-input {
+  background: var(--card-bg);
+  border-radius: 8px;
+  padding: 6px 6px;
+  font-size: 0.8rem;
+  flex: 0 1 90px;
+  width: 90px;
+  min-width: 64px;
+  color-scheme: light dark;
+}
+
 .add-btn {
   width: 28px;
   height: 28px;
@@ -387,6 +399,21 @@ body {
 .task-checkbox.checked {
   background: var(--accent-2);
   border-color: var(--accent-2);
+}
+
+.task-time {
+  flex: none;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent-2);
+  background: var(--accent-2-soft);
+  border-radius: 999px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+.task-item.done .task-time {
+  color: var(--muted);
+  background: var(--line);
 }
 
 .task-text {
