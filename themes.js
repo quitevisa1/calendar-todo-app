@@ -326,7 +326,7 @@ const THEMES = {
     "customHTML": null,
     "bg": "linear-gradient(-20deg, rgba(255,186,200,1) 0%, rgba(255,152,172,1) 100%)",
     "surface": "#fff",
-    "text": "#fff",
+    "text": "#4a4a4a",
     "accent": "#917075",
     "correct": "#db7998"
   },
