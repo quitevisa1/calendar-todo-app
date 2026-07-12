@@ -1,5 +1,6 @@
 (() => {
   const STORAGE_KEY = 'calendarTodoData';
+  const THEME_STORAGE_KEY = 'calendarTodoTheme';
 
   const weekdayRow = document.getElementById('weekdayRow');
   const calendarGrid = document.getElementById('calendarGrid');
@@ -18,6 +19,12 @@
   const taskTimeInput = document.getElementById('taskTime');
   const taskList = document.getElementById('taskList');
   const emptyState = document.getElementById('emptyState');
+
+  const themesBtn = document.getElementById('themesBtn');
+  const themeOverlay = document.getElementById('themeOverlay');
+  const themeCenter = document.getElementById('themeCenter');
+  const closeThemeCenterBtn = document.getElementById('closeThemeCenter');
+  const themeGrid = document.getElementById('themeGrid');
 
   const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -130,6 +137,105 @@
     const period = h >= 12 ? 'PM' : 'AM';
     const hour12 = h % 12 === 0 ? 12 : h % 12;
     return `${hour12}:${String(m).padStart(2, '0')} ${period}`;
+  }
+
+  // --- Themes (ported from typings.gg) ---
+
+  function hexToRgb(hex) {
+    let h = hex.replace('#', '');
+    if (h.length === 3) h = h.split('').map(c => c + c).join('');
+    const num = parseInt(h, 16);
+    return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+  }
+
+  function mix(hexA, hexB, weightA) {
+    if (!/^#/.test(hexA) || !/^#/.test(hexB)) return hexA;
+    const a = hexToRgb(hexA);
+    const b = hexToRgb(hexB);
+    const r = Math.round(a.r * weightA + b.r * (1 - weightA));
+    const g = Math.round(a.g * weightA + b.g * (1 - weightA));
+    const bl = Math.round(a.b * weightA + b.b * (1 - weightA));
+    return `rgb(${r}, ${g}, ${bl})`;
+  }
+
+  function solidColorOf(value) {
+    if (/^#/.test(value)) return value;
+    const match = value.match(/#[0-9a-fA-F]{3,6}/);
+    return match ? match[0] : '#808080';
+  }
+
+  function applyTheme(key) {
+    const root = document.documentElement.style;
+
+    if (!key || !THEMES[key]) {
+      [
+        '--bg', '--card-bg', '--ink', '--muted', '--accent', '--accent-soft',
+        '--accent-2', '--accent-2-soft', '--line', '--today-ring',
+      ].forEach(prop => root.removeProperty(prop));
+      localStorage.removeItem(THEME_STORAGE_KEY);
+      updateActiveSwatch(null);
+      return;
+    }
+
+    const theme = THEMES[key];
+    const baseBg = solidColorOf(theme.bg);
+
+    root.setProperty('--bg', theme.bg);
+    root.setProperty('--card-bg', theme.surface);
+    root.setProperty('--ink', theme.text);
+    root.setProperty('--muted', mix(theme.text, baseBg, 0.55));
+    root.setProperty('--accent', theme.accent);
+    root.setProperty('--accent-soft', mix(theme.accent, baseBg, 0.2));
+    root.setProperty('--accent-2', theme.correct);
+    root.setProperty('--accent-2-soft', mix(theme.correct, baseBg, 0.2));
+    root.setProperty('--line', mix(theme.text, baseBg, 0.1));
+    root.setProperty('--today-ring', theme.accent);
+
+    localStorage.setItem(THEME_STORAGE_KEY, key);
+    updateActiveSwatch(key);
+  }
+
+  function updateActiveSwatch(key) {
+    themeGrid.querySelectorAll('.theme-swatch').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.key === (key || 'default'));
+    });
+  }
+
+  function renderThemeGrid() {
+    const defaultBtn = document.createElement('button');
+    defaultBtn.className = 'theme-swatch';
+    defaultBtn.dataset.key = 'default';
+    defaultBtn.textContent = 'default';
+    defaultBtn.style.background = '#f6f3ee';
+    defaultBtn.style.color = '#e08a6b';
+    defaultBtn.addEventListener('click', () => applyTheme(null));
+    themeGrid.appendChild(defaultBtn);
+
+    Object.keys(THEMES).forEach(key => {
+      const theme = THEMES[key];
+      const btn = document.createElement('button');
+      btn.className = 'theme-swatch';
+      btn.dataset.key = key;
+      btn.style.background = theme.swatchBg;
+      btn.style.color = theme.swatchColor;
+      if (theme.customHTML) {
+        btn.innerHTML = theme.customHTML;
+      } else {
+        btn.textContent = theme.label;
+      }
+      btn.addEventListener('click', () => applyTheme(key));
+      themeGrid.appendChild(btn);
+    });
+  }
+
+  function showThemeCenter() {
+    themeOverlay.classList.add('visible');
+    themeCenter.classList.add('open');
+  }
+
+  function hideThemeCenter() {
+    themeOverlay.classList.remove('visible');
+    themeCenter.classList.remove('open');
   }
 
   function openDayPanel(y, m, d) {
@@ -320,8 +426,14 @@
   closePanelBtn.addEventListener('click', closeDayPanel);
   overlay.addEventListener('click', closeDayPanel);
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && dayPanel.classList.contains('open')) closeDayPanel();
+    if (e.key !== 'Escape') return;
+    if (themeCenter.classList.contains('open')) hideThemeCenter();
+    else if (dayPanel.classList.contains('open')) closeDayPanel();
   });
+
+  themesBtn.addEventListener('click', showThemeCenter);
+  closeThemeCenterBtn.addEventListener('click', hideThemeCenter);
+  themeOverlay.addEventListener('click', hideThemeCenter);
 
   prevMonthBtn.addEventListener('click', () => {
     viewMonth--;
@@ -343,4 +455,6 @@
 
   renderWeekdayRow();
   renderCalendar();
+  renderThemeGrid();
+  applyTheme(localStorage.getItem(THEME_STORAGE_KEY));
 })();

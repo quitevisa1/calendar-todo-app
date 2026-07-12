@@ -18,6 +18,7 @@
       <button id="nextMonth" class="nav-btn" aria-label="Next month">&#8250;</button>
     </div>
     <button id="todayBtn" class="today-btn">Today</button>
+    <button id="themesBtn" class="today-btn" aria-label="Open themes">Themes</button>
   </header>
 
   <div class="weekday-row" id="weekdayRow"></div>
@@ -48,6 +49,17 @@
   <p id="emptyState" class="empty-state">No tasks yet. Add your first one above.</p>
 </aside>
 
+<!-- Theme picker -->
+<div id="themeOverlay" class="overlay"></div>
+<aside id="themeCenter" class="theme-center">
+  <div class="theme-center-header">
+    <h3>Themes</h3>
+    <button id="closeThemeCenter" class="close-btn" aria-label="Close">&times;</button>
+  </div>
+  <div id="themeGrid" class="theme-grid"></div>
+</aside>
+
+<script src="themes.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
